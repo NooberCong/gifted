@@ -7,12 +7,31 @@ import { useQuizStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
 function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 12_989.233) * 43_758.545_312_3;
-  return x - Math.floor(x);
+  let x = (seed ^ 0x9e3779b9) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x85ebca6b) >>> 0;
+  x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0;
+  x = (x ^ (x >>> 16)) >>> 0;
+  return x / 4_294_967_296;
 }
 
 export default function Home() {
   const currentQuizId = useQuizStore((state) => state.currentQuizId);
+  const shootingStars = Array.from({ length: 2 }, (_, i) => {
+    const ry = seededRandom(701 + i * 31);
+    const rr = seededRandom(809 + i * 37);
+    const ro = seededRandom(907 + i * 41);
+    const rt = seededRandom(991 + i * 43);
+    const width = 34 + rr * 16;
+
+    return {
+      id: i,
+      top: `${(8 + ry * 24).toFixed(3)}%`,
+      width: `${width.toFixed(3)}px`,
+      opacity: 0.78 + ro * 0.2,
+      rotation: -(18 + rt * 12),
+      delay: i * 3,
+    };
+  });
   const stars = Array.from({ length: 38 }, (_, i) => {
     const r1 = seededRandom(i + 11);
     const r2 = seededRandom(i + 37);
@@ -31,17 +50,17 @@ export default function Home() {
     const p3y = 4 + r9 * 72;
 
     return {
-    id: i,
-    p1x,
-    p1y,
-    p2x,
-    p2y,
-    p3x,
-    p3y,
-    size: 3 + r3 * 4.5,
-    duration: 5 + r4 * 6,
-    delay: -r5 * 7,
-    glow: r4 > 0.55,
+      id: i,
+      p1x: `${p1x.toFixed(4)}%`,
+      p1y: `${p1y.toFixed(4)}%`,
+      p2x: `${p2x.toFixed(4)}%`,
+      p2y: `${p2y.toFixed(4)}%`,
+      p3x: `${p3x.toFixed(4)}%`,
+      p3y: `${p3y.toFixed(4)}%`,
+      size: `${(3 + r3 * 4.5).toFixed(4)}px`,
+      duration: 5 + r4 * 6,
+      delay: -r5 * 7,
+      glow: r4 > 0.55,
     };
   });
 
@@ -51,8 +70,8 @@ export default function Home() {
         {currentQuizId && <QuizPlayer />}
       </AnimatePresence>
 
-      <div className="min-h-screen relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className="min-h-screen relative isolate overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 z-0">
           {/* Moon integrated with top-left glow */}
           <motion.div
             className="absolute top-6 left-10 w-16 h-16 rounded-full bg-zinc-100/95 dark:bg-zinc-100/90 shadow-[0_0_36px_8px_rgba(244,244,245,0.35)]"
@@ -75,6 +94,31 @@ export default function Home() {
             transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
           />
 
+          {/* Shooting stars */}
+          {shootingStars.map((shootingStar) => (
+            <motion.div
+              key={shootingStar.id}
+              className="absolute -right-24 h-px bg-gradient-to-r from-zinc-100/95 via-zinc-100/70 to-transparent dark:from-zinc-100/90 dark:via-zinc-100/65 shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+              style={{
+                top: shootingStar.top,
+                width: shootingStar.width,
+                rotate: `${shootingStar.rotation.toFixed(3)}deg`,
+              }}
+              animate={{
+                x: ['0vw', '-110vw', '-110vw', '-110vw', '-110vw'],
+                y: ['0vh', '90vh', '90vh', '90vh', '90vh'],
+                opacity: [0, shootingStar.opacity, shootingStar.opacity, 0, 0],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                delay: shootingStar.delay,
+                times: [0, 0.08, 0.32, 0.42, 1],
+                ease: 'linear',
+              }}
+            />
+          ))}
+
           {/* Stars: shine, dim, disappear, reappear */}
           {stars.map((star) => (
             <motion.span
@@ -84,8 +128,8 @@ export default function Home() {
                 star.glow && "shadow-[0_0_10px_rgba(255,255,255,0.75)]"
               )}
               style={{
-                left: `${star.p1x}%`,
-                top: `${star.p1y}%`,
+                left: star.p1x,
+                top: star.p1y,
                 width: star.size,
                 height: star.size,
               }}
@@ -104,7 +148,7 @@ export default function Home() {
         </div>
 
         {/* Header */}
-        <header>
+        <header className="relative z-10">
           <div className="max-w-4xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -121,7 +165,7 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-6 py-12">
+        <main className="relative z-10 max-w-4xl mx-auto px-6 py-12">
           <QuizImport />
           <QuizList />
           
@@ -148,7 +192,7 @@ The Earth is flat. {FALSE}`}
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-auto">
+        <footer className="relative z-10 border-t border-zinc-200 dark:border-zinc-800 mt-auto">
           <div className="max-w-4xl mx-auto px-6 py-6 text-center text-sm text-zinc-500">
             <p>
               Import a quiz via file upload, URL, or use query params{' '}
