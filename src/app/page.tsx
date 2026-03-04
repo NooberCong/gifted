@@ -22,14 +22,19 @@ export default function Home() {
     const ro = seededRandom(907 + i * 41);
     const rt = seededRandom(991 + i * 43);
     const width = 34 + rr * 16;
+    const rotation = -(18 + rt * 12);
+    const travelX = 110;
+    const travelY = Math.tan((Math.abs(rotation) * Math.PI) / 180) * travelX;
 
     return {
       id: i,
       top: `${(8 + ry * 24).toFixed(3)}%`,
       width: `${width.toFixed(3)}px`,
       opacity: 0.78 + ro * 0.2,
-      rotation: -(18 + rt * 12),
-      delay: i * 3,
+      rotation,
+      travelX: `${travelX.toFixed(3)}vw`,
+      travelY: `${travelY.toFixed(3)}vw`,
+      delay: i * 4.5,
     };
   });
   const stars = Array.from({ length: 38 }, (_, i) => {
@@ -72,9 +77,9 @@ export default function Home() {
 
       <div className="min-h-screen relative isolate overflow-hidden">
         <div className="pointer-events-none absolute inset-0 z-0">
-          {/* Moon integrated with top-left glow */}
+          {/* Moon integrated with top glow */}
           <motion.div
-            className="absolute top-6 left-10 w-16 h-16 rounded-full bg-zinc-100/95 dark:bg-zinc-100/90 shadow-[0_0_36px_8px_rgba(244,244,245,0.35)]"
+            className="absolute top-6 right-6 lg:right-auto lg:left-10 w-16 h-16 rounded-full bg-zinc-100/95 dark:bg-zinc-100/90 shadow-[0_0_36px_8px_rgba(244,244,245,0.35)]"
             animate={{
               scale: [1, 1.05, 0.98, 1],
               opacity: [0.9, 1, 0.86, 0.9],
@@ -84,15 +89,44 @@ export default function Home() {
 
           {/* Atmosphere blobs */}
           <motion.div
-            className="absolute -top-24 -left-28 w-84 h-84 rounded-full bg-blue-300/18 dark:bg-blue-500/12 blur-3xl"
+            className="absolute -top-24 -right-28 sm:right-auto sm:-left-28 w-84 h-84 rounded-full bg-blue-300/18 dark:bg-blue-500/12 blur-3xl"
             animate={{ x: [0, 40, -20, 0], y: [0, 20, -10, 0], scale: [1, 1.08, 0.96, 1] }}
             transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <motion.div
-            className="absolute -bottom-24 -right-16 w-96 h-96 rounded-full bg-emerald-300/15 dark:bg-emerald-500/10 blur-3xl"
-            animate={{ x: [0, -35, 20, 0], y: [0, -25, 10, 0], scale: [1, 0.94, 1.06, 1] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          <div className="absolute -bottom-44 -left-36 lg:left-auto lg:-right-36 w-[32rem] h-[32rem]">
+            <motion.div
+              className="absolute inset-0 rounded-full bg-emerald-300/15 dark:bg-emerald-500/10 blur-3xl"
+              animate={{ x: [0, -35, 20, 0], y: [0, -25, 10, 0], scale: [1, 0.94, 1.06, 1] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute left-1/2 top-1/2 w-56 h-56 sm:w-64 sm:h-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-100/35 dark:border-emerald-200/20 shadow-[0_0_50px_rgba(16,185,129,0.6)] overflow-hidden"
+              animate={{
+                y: [0, -5.5, 0],
+              }}
+              transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <motion.img
+                src="/earth.png"
+                alt="Earth"
+                className="absolute inset-0 w-full h-full object-cover blur-[0.6px] brightness-90 saturate-90"
+                animate={{ scale: [1, 1.025, 1] }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.span
+                className="absolute inset-0 opacity-45 mix-blend-screen"
+                style={{
+                  background:
+                    'radial-gradient(52% 44% at 24% 22%, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.14) 54%, transparent 72%)',
+                  filter: 'blur(1.2px)',
+                }}
+                animate={{ x: ['-2%', '4%', '-2%'], y: ['0%', '1.5%', '0%'] }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <span className="absolute -inset-[10%] rounded-full border border-emerald-200/20 blur-[1.2px]" />
+              <span className="absolute inset-0 rounded-full shadow-[inset_-12px_-14px_24px_rgba(8,47,73,0.26),inset_9px_11px_18px_rgba(255,255,255,0.2)]" />
+            </motion.div>
+          </div>
 
           {/* Shooting stars */}
           {shootingStars.map((shootingStar) => (
@@ -105,16 +139,29 @@ export default function Home() {
                 rotate: `${shootingStar.rotation.toFixed(3)}deg`,
               }}
               animate={{
-                x: ['0vw', '-110vw', '-110vw', '-110vw', '-110vw'],
-                y: ['0vh', '90vh', '90vh', '90vh', '90vh'],
-                opacity: [0, shootingStar.opacity, shootingStar.opacity, 0, 0],
+                x: [
+                  '0vw',
+                  `-${(Number.parseFloat(shootingStar.travelX) * 0.2).toFixed(3)}vw`,
+                  `-${(Number.parseFloat(shootingStar.travelX) * 0.55).toFixed(3)}vw`,
+                  `-${(Number.parseFloat(shootingStar.travelX) * 0.9).toFixed(3)}vw`,
+                  `-${shootingStar.travelX}`,
+                ],
+                y: [
+                  '0vw',
+                  `${(Number.parseFloat(shootingStar.travelY) * 0.2).toFixed(3)}vw`,
+                  `${(Number.parseFloat(shootingStar.travelY) * 0.55).toFixed(3)}vw`,
+                  `${(Number.parseFloat(shootingStar.travelY) * 0.9).toFixed(3)}vw`,
+                  shootingStar.travelY,
+                ],
+                opacity: [0, shootingStar.opacity, shootingStar.opacity, shootingStar.opacity, 0],
               }}
               transition={{
-                duration: 20,
+                duration: 5,
                 repeat: Infinity,
+                repeatDelay: 4,
                 delay: shootingStar.delay,
-                times: [0, 0.08, 0.32, 0.42, 1],
                 ease: 'linear',
+                times: [0, 0.08, 0.4, 0.78, 1],
               }}
             />
           ))}
@@ -192,7 +239,7 @@ The Earth is flat. {FALSE}`}
         </main>
 
         {/* Footer */}
-        <footer className="relative z-10 border-t border-zinc-200 dark:border-zinc-800 mt-auto">
+        <footer className="relative z-10 mt-auto">
           <div className="max-w-4xl mx-auto px-6 py-6 text-center text-sm text-zinc-500">
             <p>
               Import a quiz via file upload, URL, or use query params{' '}
