@@ -3,6 +3,12 @@ Interactive GIFT quiz player for fast import, clean quiz-taking UX, and rich mar
 
 Gifted is built for teachers, trainers, and teams that already have quiz banks in GIFT format and want a modern browser-based experience.
 
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://gifted-gold-three.vercel.app/)
+
+## Live Demo
+
+https://gifted-gold-three.vercel.app/
+
 ## Highlights
 
 1. Import from local `.gift`/`.txt` files or URLs
@@ -13,22 +19,6 @@ Gifted is built for teachers, trainers, and teams that already have quiz banks i
 6. Matching question feedback shows correct pair when user is wrong
 7. Review mode + results breakdown after completion
 8. Quiz data persistence in session storage
-
-## Demo Screenshots
-
-Add screenshots/GIFs to make the repo pop visually:
-
-1. `docs/screenshots/import.png` - Import flow
-2. `docs/screenshots/player-desktop.png` - Desktop split layout
-3. `docs/screenshots/results.png` - Results and review
-
-Example markdown once images are added:
-
-```md
-![Import UI](docs/screenshots/import.png)
-![Quiz Player](docs/screenshots/player-desktop.png)
-![Results](docs/screenshots/results.png)
-```
 
 ## Tech Stack
 
