@@ -1,0 +1,62 @@
+// Sample Quiz - GIFT Format Demo
+// This quiz demonstrates various GIFT format question types
+
+::Geography - Capital Cities::
+What is the capital of France?
+{
+    =Paris
+    ~London
+    ~Berlin
+    ~Madrid
+}
+
+::History - World War II::
+World War II ended in which year?
+{
+    ~1943
+    ~1944
+    =1945
+    ~1946
+}
+
+::Science - True/False::
+The Sun revolves around the Earth.
+{FALSE}
+
+::Biology::
+Water is composed of hydrogen and oxygen atoms.
+{TRUE}
+
+::Math - Short Answer::
+What is 7 multiplied by 8?
+{=56 =fifty-six =fifty six}
+
+::Programming::
+What programming language is known for its use in web browsers?
+{=JavaScript =JS =javascript =js}
+
+::Physics - Numerical::
+What is the speed of light in millions of km/s (approximately)?
+{#300:10}
+
+::Literature - Matching::
+Match the author with their famous work.
+{
+    =Shakespeare -> Hamlet
+    =Dickens -> Oliver Twist
+    =Austen -> Pride and Prejudice
+    =Tolkien -> The Hobbit
+}
+
+::Essay Question::
+Describe the impact of the Industrial Revolution on modern society.
+{}
+
+::Computer Science::
+Which data structure follows the LIFO (Last In, First Out) principle?
+{
+    =Stack
+    ~Queue
+    ~Array
+    ~Linked List
+}

@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gifted
+Interactive GIFT quiz player for fast import, clean quiz-taking UX, and rich markdown question rendering.
 
-## Getting Started
+Gifted is built for teachers, trainers, and teams that already have quiz banks in GIFT format and want a modern browser-based experience.
 
-First, run the development server:
+## Highlights
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Import from local `.gift`/`.txt` files or URLs
+2. URL import works via server-side proxy (avoids browser CORS issues)
+3. Full markdown question rendering (`[markdown]`) with GFM support
+4. Supports all major GIFT question types used in this app
+5. Multi-correct multiple-choice grading (exact-match selection)
+6. Matching question feedback shows correct pair when user is wrong
+7. Review mode + results breakdown after completion
+8. Quiz data persistence in session storage
+
+## Demo Screenshots
+
+Add screenshots/GIFs to make the repo pop visually:
+
+1. `docs/screenshots/import.png` - Import flow
+2. `docs/screenshots/player-desktop.png` - Desktop split layout
+3. `docs/screenshots/results.png` - Results and review
+
+Example markdown once images are added:
+
+```md
+![Import UI](docs/screenshots/import.png)
+![Quiz Player](docs/screenshots/player-desktop.png)
+![Results](docs/screenshots/results.png)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Next.js 16 (App Router)
+2. React 19 + TypeScript
+3. Tailwind CSS v4
+4. Zustand (session persistence)
+5. Framer Motion
+6. Lucide Icons
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supported GIFT Types
 
-## Learn More
+1. Multiple choice (single and multi-correct)
+2. True/False
+3. Short answer
+4. Matching
+5. Numerical
+6. Essay
 
-To learn more about Next.js, take a look at the following resources:
+For full syntax and compatibility details, see [QUIZ_GUIDE.md](QUIZ_GUIDE.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Quick Start
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Open `http://localhost:3000`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # start dev server
+npm run build    # production build
+npm start        # run production server
+npm run lint     # lint checks
+```
+
+## Import Options
+
+1. File upload from local machine
+2. URL import in UI
+3. Query param auto-import:
+
+```text
+http://localhost:3000/?file=https://example.com/quiz.gift
+```
+
+## Example GIFT
+
+```gift
+::Capital of France::
+[markdown]
+What is the capital of **France**?
+{=Paris ~London ~Berlin ~Madrid}
+
+::True or False::
+The Earth is flat.
+{FALSE}
+```
+
+## Project Structure
+
+```text
+src/app/                # App Router pages + API routes
+src/components/         # UI components (import/list/player/results/cards)
+src/lib/gift-parser.ts  # GIFT parsing logic
+src/lib/store.ts        # Zustand quiz state
+public/                 # sample .gift files
+```
+
+## Quality Notes
+
+1. URL imports are proxied by `src/app/api/import/route.ts`.
+2. Markdown links open in new tab with safe `rel` attributes.
+3. Quiz overlay locks background scroll for focused test-taking.
+
+## Contributing
+
+Contributions are welcome. Good first improvements:
+
+1. Add Playwright E2E coverage for import + quiz flow
+2. Add unit tests for parser edge cases
+3. Add screenshot assets for this README
+
+## License
+
+Choose and add a license file (`MIT` recommended for open-source projects).
