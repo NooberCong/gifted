@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Link, FileText, AlertCircle, Loader2, X } from 'lucide-react';
+import { Upload, Link, FileText, AlertCircle, Loader2, X, Copy, Check } from 'lucide-react';
 import { parseGift, validateGiftContent } from '@/lib/gift-parser';
 import { useQuizStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ export function QuizImport({ onImportComplete }: QuizImportProps) {
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null);
   const [pendingFileBaseName, setPendingFileBaseName] = useState<string | null>(null);
   const [pendingFileSource, setPendingFileSource] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -40,34 +41,15 @@ export function QuizImport({ onImportComplete }: QuizImportProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const fileUrl = params.get('file');
+    const sharedName = params.get('name');
     if (fileUrl) {
       setUrl(fileUrl);
       setMode('url');
-      // Fetch immediately on mount
-      (async () => {
-        setIsLoading(true);
-        try {
-          const content = await fetchGiftFromUrl(fileUrl);
-          const urlName = fileUrl.split('/').pop()?.replace(/\.(txt|gift)$/i, '') || 'URL Import';
-          const validation = validateGiftContent(content);
-          if (!validation.valid) {
-            setError(validation.error || 'Invalid GIFT format');
-            return;
-          }
-          const quiz = parseGift(content, urlName);
-          quiz.source = fileUrl;
-          addQuiz(quiz);
-          setError(null);
-          setUrl('');
-          setMode(null);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch URL');
-        } finally {
-          setIsLoading(false);
-        }
-      })();
+      if (sharedName) {
+        setQuizName(sharedName);
+      }
     }
-  }, [addQuiz, fetchGiftFromUrl]);
+  }, []);
 
   const processGiftContent = useCallback((content: string, source?: string, defaultQuizName?: string) => {
     const validation = validateGiftContent(content);
@@ -155,6 +137,29 @@ export function QuizImport({ onImportComplete }: QuizImportProps) {
       setIsLoading(false);
     }
   }, [url, processGiftContent, fetchGiftFromUrl]);
+
+  const handleCopyShareLink = useCallback(async () => {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError('Please enter a URL first');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('file', targetUrl);
+    if (quizName.trim()) {
+      params.set('name', quizName.trim());
+    }
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 1800);
+    } catch {
+      setError('Failed to copy share link');
+    }
+  }, [url, quizName]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -342,7 +347,10 @@ export function QuizImport({ onImportComplete }: QuizImportProps) {
               <input
                 type="url"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (shareCopied) setShareCopied(false);
+                }}
                 placeholder="https://example.com/quiz.gift"
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border bg-transparent",
@@ -350,6 +358,31 @@ export function QuizImport({ onImportComplete }: QuizImportProps) {
                   "dark:border-zinc-700"
                 )}
               />
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleCopyShareLink}
+                  disabled={!url.trim()}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors",
+                    "border border-zinc-300 text-zinc-700 hover:bg-zinc-100",
+                    "dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800",
+                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {shareCopied ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Share
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>

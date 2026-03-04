@@ -19,6 +19,10 @@ https://gifted-gold-three.vercel.app/
 6. Matching question feedback shows correct pair when user is wrong
 7. Review mode + results breakdown after completion
 8. Quiz data persistence in session storage
+9. Desktop-optimized matching UI with drag/drop option chips
+10. Shareable URL imports with optional prefilled quiz name via query params
+11. Last run summary per quiz (correct answers + duration)
+12. In-app confirm dialogs for critical actions (quit/delete)
 
 ## Tech Stack
 
@@ -62,10 +66,12 @@ npm run lint     # lint checks
 
 1. File upload from local machine
 2. URL import in UI
-3. Query param auto-import:
+3. Share button in URL mode copies a link using query params
+4. Query params:
 
 ```text
 http://localhost:3000/?file=https://example.com/quiz.gift
+http://localhost:3000/?file=https://example.com/quiz.gift&name=My%20Quiz
 ```
 
 ## Example GIFT
@@ -96,6 +102,7 @@ public/                 # sample .gift files
 1. URL imports are proxied by `src/app/api/import/route.ts`.
 2. Markdown links open in new tab with safe `rel` attributes.
 3. Quiz overlay locks background scroll for focused test-taking.
+4. Active quiz updates browser tab title to the current quiz name.
 
 ## Contributing
 

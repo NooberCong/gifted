@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 import { useQuizStore } from '@/lib/store';
@@ -12,16 +12,21 @@ export function QuizPlayer() {
   const {
     currentQuizId,
     currentQuestionIndex,
+    currentAttempt,
     showResults,
     isReviewMode,
     getCurrentQuiz,
     getCurrentQuestion,
     exitQuiz,
-    setReviewMode
+    setReviewMode,
+    goToQuestion,
+    finishQuiz
   } = useQuizStore();
 
   const quiz = getCurrentQuiz();
   const question = getCurrentQuestion();
+  const dotsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
@@ -35,12 +40,37 @@ export function QuizPlayer() {
     };
   }, []);
 
+  useEffect(() => {
+    const container = dotsContainerRef.current;
+    if (!container) return;
+    const activeDot = container.querySelector<HTMLButtonElement>('[data-current="true"]');
+    if (!activeDot) return;
+    activeDot.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [currentQuestionIndex, showResults]);
+
+  useEffect(() => {
+    if (!quiz) return;
+    const previousTitle = document.title;
+    document.title = `${quiz.name} | Gifted`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [quiz]);
+
   if (!currentQuizId || !quiz) return null;
 
   const handleExit = () => {
     if (isReviewMode) {
       setReviewMode(false);
-    } else {
+      return;
+    }
+
+    if (!showResults) {
+      setShowExitDialog(true);
+      return;
+    }
+
+    if (showResults) {
       exitQuiz();
     }
   };
@@ -80,25 +110,135 @@ export function QuizPlayer() {
             </div>
           </div>
 
-          {!showResults && (
-            <div className="hidden sm:flex items-center gap-1">
-              {quiz.questions.map((_, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-colors",
+          <div className="flex items-center gap-3 min-w-0 flex-1 justify-end">
+            {(!showResults || isReviewMode) && (
+              <div
+                ref={dotsContainerRef}
+                className="hidden sm:flex min-w-0 max-w-full items-center gap-0.5 px-1 py-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {quiz.questions.map((quizQuestion, index) => {
+                  const answer = currentAttempt?.answers[quizQuestion.id];
+                  const status =
                     index === currentQuestionIndex
-                      ? "bg-zinc-900 dark:bg-white"
-                      : index < currentQuestionIndex
-                      ? "bg-zinc-400 dark:bg-zinc-500"
-                      : "bg-zinc-200 dark:bg-zinc-700"
-                  )}
-                />
-              ))}
-            </div>
-          )}
+                      ? 'current'
+                      : answer === undefined
+                      ? 'not-done'
+                      : answer.isCorrect
+                      ? 'correct'
+                      : 'wrong';
+
+                  return (
+                  <button
+                    key={quizQuestion.id}
+                    onClick={() => goToQuestion(index)}
+                    data-current={status === 'current' ? 'true' : 'false'}
+                    className={cn(
+                      "shrink-0",
+                      "w-4 h-4 rounded-full flex items-center justify-center transition-all",
+                      status === 'current' && "ring-1 ring-zinc-300 dark:ring-zinc-600",
+                      status === 'correct' && "hover:bg-green-50/70 dark:hover:bg-green-900/20",
+                      status === 'wrong' && "hover:bg-red-50/70 dark:hover:bg-red-900/20",
+                      status === 'not-done' && "hover:bg-zinc-100/70 dark:hover:bg-zinc-800"
+                    )}
+                    title={`Question ${index + 1}: ${
+                      status === 'current'
+                        ? 'Current'
+                        : status === 'correct'
+                        ? 'Correct'
+                        : status === 'wrong'
+                        ? 'Wrong'
+                        : 'Not done'
+                    }`}
+                    aria-label={`Go to question ${index + 1}`}
+                  >
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        status === 'current' && "bg-white shadow-[0_0_0_1px_rgba(161,161,170,0.75)] dark:shadow-[0_0_0_1px_rgba(113,113,122,0.85)]",
+                        status === 'correct' && "bg-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.28)]",
+                        status === 'wrong' && "bg-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.24)]",
+                        status === 'not-done' && "bg-zinc-300 dark:bg-zinc-600"
+                      )}
+                    />
+                  </button>
+                )})}
+              </div>
+            )}
+          </div>
         </div>
       </header>
+
+      <AnimatePresence>
+        {showExitDialog && !showResults && !isReviewMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-zinc-950/45 backdrop-blur-[2px] flex items-center justify-center px-4"
+            onClick={() => setShowExitDialog(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+              className="w-full max-w-md rounded-2xl border border-zinc-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-5">
+                <p className="text-xs font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400 mb-2">
+                  Confirm Action
+                </p>
+                <h2 className="text-xl font-semibold mb-2">Leave Quiz?</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300 mb-6">
+                You answered {Object.keys(currentAttempt?.answers || {}).length}/{quiz.questions.length} questions.
+                Choose how you want to leave this attempt.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setShowExitDialog(false);
+                    finishQuiz();
+                  }}
+                  className={cn(
+                    "w-full px-4 py-2.5 rounded-lg font-medium transition-colors",
+                    "bg-zinc-900 text-white hover:bg-zinc-800",
+                    "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                  )}
+                >
+                  Show Results
+                </button>
+                <button
+                  onClick={() => {
+                    setShowExitDialog(false);
+                  }}
+                  className={cn(
+                    "w-full px-4 py-2.5 rounded-lg font-medium transition-colors",
+                    "border border-zinc-300 text-zinc-700 hover:bg-zinc-100",
+                    "dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  Continue Quiz
+                </button>
+                <button
+                  onClick={() => {
+                    setShowExitDialog(false);
+                    exitQuiz();
+                  }}
+                  className={cn(
+                    "w-full px-4 py-2.5 rounded-lg font-medium transition-colors",
+                    "text-red-700 hover:bg-red-50",
+                    "dark:text-red-300 dark:hover:bg-red-900/20"
+                  )}
+                >
+                  Quit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto">

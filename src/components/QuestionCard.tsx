@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Check, X, ChevronRight, ChevronLeft, GripVertical } from 'lucide-react';
 import type { Question, Answer } from '@/lib/gift-parser';
 import { useQuizStore } from '@/lib/store';
 import { cn, checkAnswer, shuffleArray } from '@/lib/utils';
@@ -105,7 +105,23 @@ export function QuestionCard({ question, questionNumber, totalQuestions }: Quest
 
   const handleMatchSelect = (left: string, right: string) => {
     if (showFeedback && !isReviewMode) return;
-    setMatchingAnswers(prev => ({ ...prev, [left]: right }));
+    setMatchingAnswers((prev) => {
+      const next = { ...prev };
+
+      const fromLeft = Object.keys(next).find((key) => next[key] === right);
+      const targetPreviousRight = next[left];
+
+      if (fromLeft && fromLeft !== left) {
+        if (targetPreviousRight && targetPreviousRight !== right) {
+          next[fromLeft] = targetPreviousRight;
+        } else {
+          delete next[fromLeft];
+        }
+      }
+
+      next[left] = right;
+      return next;
+    });
   };
 
   const handleSubmit = () => {
@@ -201,11 +217,81 @@ export function QuestionCard({ question, questionNumber, totalQuestions }: Quest
               <MarkdownText text={question.text} enabled={useMarkdown} />
             </div>
           </div>
+
+          {/* Desktop matching prompts under question */}
+          {question.type === 'matching' && question.matchPairs && (
+            <div className="hidden lg:block mt-6 space-y-3">
+              {question.matchPairs.map((pair, index) => {
+                const currentMatch = matchingAnswers[pair.left];
+                const isCorrectMatch = showFeedback && currentMatch === pair.right;
+                const isWrongMatch = showFeedback && !!currentMatch && currentMatch !== pair.right;
+
+                return (
+                  <div key={index} className="space-y-2">
+                    <div
+                      className={cn(
+                        "rounded-xl border p-3",
+                        "border-zinc-200 dark:border-zinc-700",
+                        isCorrectMatch && "border-green-500/70 bg-green-50/60 dark:bg-green-900/20",
+                        isWrongMatch && "border-red-500/70 bg-red-50/60 dark:bg-red-900/20"
+                      )}
+                      onDragOver={(e) => {
+                        if (showFeedback && !isReviewMode) return;
+                        e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        if (showFeedback && !isReviewMode) return;
+                        e.preventDefault();
+                        const dropped = e.dataTransfer.getData('text/plain');
+                        if (dropped) handleMatchSelect(pair.left, dropped);
+                      }}
+                    >
+                      <p className="text-sm font-medium mb-2">{pair.left}</p>
+                      <div className="min-h-9">
+                        {currentMatch ? (
+                          <button
+                            type="button"
+                            draggable={!(showFeedback && !isReviewMode)}
+                            onDragStart={(e) => e.dataTransfer.setData('text/plain', currentMatch)}
+                            onClick={() => {
+                              if (showFeedback && !isReviewMode) return;
+                              setMatchingAnswers((prev) => {
+                                const next = { ...prev };
+                                delete next[pair.left];
+                                return next;
+                              });
+                            }}
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm border",
+                              "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800",
+                              "hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                            )}
+                          >
+                            <GripVertical className="w-3.5 h-3.5 text-zinc-500" />
+                            <span>{currentMatch}</span>
+                          </button>
+                        ) : (
+                          <div className="text-xs text-zinc-500 border border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg px-2.5 py-2">
+                            Drag an option here
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {showFeedback && isWrongMatch && (
+                      <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
+                        Correct match: <span className="font-medium">{pair.right}</span>
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         
         <div>
           {/* Answers */}
-          <div className="space-y-3 mb-6 lg:max-h-[calc(100vh-320px)] lg:overflow-y-auto lg:pr-2">
+          <div className="space-y-3 mb-6 lg:max-h-[calc(100vh-320px)] lg:overflow-y-auto lg:pl-1 lg:pr-3 lg:py-1">
         {question.type === 'multiple-choice' && isMultiSelect && (
           <p className="text-sm text-zinc-500">Select all that apply.</p>
         )}
@@ -227,12 +313,12 @@ export function QuestionCard({ question, questionNumber, totalQuestions }: Quest
                   onClick={() => handleSelect(answer.text)}
                   disabled={showFeedback && !isReviewMode}
                   className={cn(
-                    "w-full flex items-center justify-between p-4 rounded-xl text-left transition-all",
+                    "w-full flex items-center justify-between p-4 rounded-xl text-left transition-all duration-200",
                     "border-2",
                     !showFeedback && [
                       isSelected
                         ? "border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800"
-                        : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+                        : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800/70 hover:shadow-sm"
                     ],
                     showFeedback && [
                       isCorrect && "border-green-500 bg-green-50 dark:bg-green-900/20",
@@ -246,8 +332,8 @@ export function QuestionCard({ question, questionNumber, totalQuestions }: Quest
                 </button>
                 {shouldShowFeedbackText && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className={cn(
                       "text-sm px-4 py-2 rounded-lg ml-2",
                       isCorrect
@@ -304,64 +390,116 @@ export function QuestionCard({ question, questionNumber, totalQuestions }: Quest
         )}
 
         {question.type === 'matching' && question.matchPairs && (
-          <div className="space-y-4">
-            {question.matchPairs.map((pair, index) => {
-              const currentMatch = matchingAnswers[pair.left];
-              const isCorrectMatch = showFeedback && currentMatch === pair.right;
-              const isWrongMatch = showFeedback && currentMatch && currentMatch !== pair.right;
-              
-              return (
-                <div key={index} className="space-y-2">
-                  <div
-                    className={cn(
-                      "flex items-center gap-4 rounded-lg p-1 border",
-                      "border-transparent",
-                      isCorrectMatch && "border-green-500/70",
-                      isWrongMatch && "border-red-500/70"
-                    )}
-                  >
-                    <div className={cn(
-                      "flex-1 p-3 rounded-lg border bg-zinc-100 dark:bg-zinc-800",
-                      "border-zinc-200 dark:border-zinc-700",
-                      isCorrectMatch && "bg-green-100 dark:bg-green-900/30",
-                      isWrongMatch && "bg-red-100 dark:bg-red-900/30",
-                      isCorrectMatch && "border-green-500",
-                      isWrongMatch && "border-red-500"
-                    )}>
-                      {pair.left}
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-zinc-400" />
-                    <select
-                      value={matchingAnswers[pair.left] || ''}
-                      onChange={(e) => handleMatchSelect(pair.left, e.target.value)}
-                      disabled={showFeedback && !isReviewMode}
+          <>
+            {/* Desktop: options zone on the right */}
+            <div className="hidden lg:block">
+              <div
+                className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 h-fit self-start"
+                onDragOver={(e) => {
+                  if (showFeedback && !isReviewMode) return;
+                  e.preventDefault();
+                }}
+                onDrop={(e) => {
+                  if (showFeedback && !isReviewMode) return;
+                  e.preventDefault();
+                  const dropped = e.dataTransfer.getData('text/plain');
+                  if (!dropped) return;
+                  setMatchingAnswers((prev) => {
+                    const next = { ...prev };
+                    const fromLeft = Object.keys(next).find((key) => next[key] === dropped);
+                    if (fromLeft) delete next[fromLeft];
+                    return next;
+                  });
+                }}
+              >
+                <p className="text-xs uppercase tracking-wide text-zinc-500 mb-2">Options</p>
+                <div className="flex flex-col gap-2">
+                  {shuffledMatchOptions.map((option, i) => {
+                    const isUsed = Object.values(matchingAnswers).includes(option);
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        draggable={!(showFeedback && !isReviewMode)}
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', option)}
+                        onClick={() => {
+                          if (showFeedback && !isReviewMode) return;
+                        }}
+                        className={cn(
+                          "w-full text-left px-2.5 py-1.5 rounded-lg border text-sm transition-colors",
+                          "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800",
+                          isUsed && "opacity-60",
+                          "hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                        )}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile/tablet fallback: select controls */}
+            <div className="space-y-4 lg:hidden">
+              {question.matchPairs.map((pair, index) => {
+                const currentMatch = matchingAnswers[pair.left];
+                const isCorrectMatch = showFeedback && currentMatch === pair.right;
+                const isWrongMatch = showFeedback && currentMatch && currentMatch !== pair.right;
+
+                return (
+                  <div key={index} className="space-y-2">
+                    <div
                       className={cn(
-                        "flex-1 p-3 rounded-lg border-2 appearance-none cursor-pointer",
-                        "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100",
-                        "focus:outline-none focus:ring-2 focus:ring-blue-500",
-                        "dark:border-zinc-700",
-                        "disabled:opacity-60 disabled:cursor-not-allowed",
-                        isCorrectMatch && "border-green-500",
-                        isWrongMatch && "border-red-500"
+                        "flex items-center gap-4 rounded-lg p-1 border",
+                        "border-transparent",
+                        isCorrectMatch && "border-green-500/70",
+                        isWrongMatch && "border-red-500/70"
                       )}
                     >
-                      <option value="" className="text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800">Select...</option>
-                      {shuffledMatchOptions.map((option, i) => (
-                        <option key={i} value={option} className="text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800">
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                      <div className={cn(
+                        "flex-1 p-3 rounded-lg border bg-zinc-100 dark:bg-zinc-800",
+                        "border-zinc-200 dark:border-zinc-700",
+                        isCorrectMatch && "bg-green-100 dark:bg-green-900/30",
+                        isWrongMatch && "bg-red-100 dark:bg-red-900/30",
+                        isCorrectMatch && "border-green-500",
+                        isWrongMatch && "border-red-500"
+                      )}>
+                        {pair.left}
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-zinc-400" />
+                      <select
+                        value={matchingAnswers[pair.left] || ''}
+                        onChange={(e) => handleMatchSelect(pair.left, e.target.value)}
+                        disabled={showFeedback && !isReviewMode}
+                        className={cn(
+                          "flex-1 p-3 rounded-lg border-2 appearance-none cursor-pointer",
+                          "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100",
+                          "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                          "dark:border-zinc-700",
+                          "disabled:opacity-60 disabled:cursor-not-allowed",
+                          isCorrectMatch && "border-green-500",
+                          isWrongMatch && "border-red-500"
+                        )}
+                      >
+                        <option value="" className="text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800">Select...</option>
+                        {shuffledMatchOptions.map((option, i) => (
+                          <option key={i} value={option} className="text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800">
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {showFeedback && isWrongMatch && (
+                      <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
+                        Correct match: <span className="font-medium">{pair.right}</span>
+                      </p>
+                    )}
                   </div>
-                  {showFeedback && isWrongMatch && (
-                    <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
-                      Correct match: <span className="font-medium">{pair.right}</span>
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {question.type === 'essay' && (

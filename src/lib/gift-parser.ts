@@ -50,6 +50,12 @@ export interface Quiz {
   questions: Question[];
   importedAt: number;
   source?: string;
+  lastCompletion?: {
+    correctCount: number;
+    totalQuestions: number;
+    durationMs: number;
+    completedAt: number;
+  };
 }
 
 function generateId(): string {
@@ -99,13 +105,16 @@ function parseAnswerBlock(block: string): {
   const content = block.slice(1, -1).trim();
   
   // True/False
-  if (content === 'T' || content === 'TRUE' || content === 'F' || content === 'FALSE') {
-    const isTrue = content === 'T' || content === 'TRUE';
+  const trueFalseMatch = content.match(/^(T|TRUE|F|FALSE)(?:#(.+))?$/i);
+  if (trueFalseMatch) {
+    const token = trueFalseMatch[1].toUpperCase();
+    const isTrue = token === 'T' || token === 'TRUE';
+    const feedback = trueFalseMatch[2] ? unescapeGift(trueFalseMatch[2].trim()) : undefined;
     return {
       type: 'true-false',
       answers: [
-        { text: 'True', isCorrect: isTrue },
-        { text: 'False', isCorrect: !isTrue }
+        { text: 'True', isCorrect: isTrue, feedback: isTrue ? feedback : undefined },
+        { text: 'False', isCorrect: !isTrue, feedback: !isTrue ? feedback : undefined }
       ]
     };
   }

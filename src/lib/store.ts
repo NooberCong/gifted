@@ -152,16 +152,33 @@ export const useQuizStore = create<QuizState>()(
           const quiz = state.quizzes.find(q => q.id === state.currentQuizId);
           if (!quiz) return state;
 
+          const completedAt = Date.now();
           const correctCount = Object.values(state.currentAttempt.answers).filter(
             a => a.isCorrect
           ).length;
+          const totalQuestions = quiz.questions.length;
+          const durationMs = completedAt - state.currentAttempt.startedAt;
+          const score = Math.round((correctCount / totalQuestions) * 100);
 
           return {
             showResults: true,
+            quizzes: state.quizzes.map((q) =>
+              q.id === quiz.id
+                ? {
+                    ...q,
+                    lastCompletion: {
+                      correctCount,
+                      totalQuestions,
+                      durationMs,
+                      completedAt
+                    }
+                  }
+                : q
+            ),
             currentAttempt: {
               ...state.currentAttempt,
-              completedAt: Date.now(),
-              score: Math.round((correctCount / quiz.questions.length) * 100)
+              completedAt,
+              score
             }
           };
         });
