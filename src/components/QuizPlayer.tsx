@@ -84,7 +84,7 @@ export function QuizPlayer() {
     >
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={handleExit}
@@ -110,11 +110,11 @@ export function QuizPlayer() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 min-w-0 flex-1 justify-end">
+          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1 sm:justify-end">
             {(!showResults || isReviewMode) && (
               <div
                 ref={dotsContainerRef}
-                className="hidden sm:flex min-w-0 max-w-full items-center gap-0.5 px-1 py-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex min-w-0 max-w-full items-center gap-0.5 px-1 py-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               >
                 {quiz.questions.map((quizQuestion, index) => {
                   const answer = currentAttempt?.answers[quizQuestion.id];
