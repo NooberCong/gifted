@@ -24,3 +24,163 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.ambient-moon {
+  animation: ambient-moon 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.ambient-blob {
+  animation-duration: 16s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.ambient-blob-blue {
+  animation-name: ambient-blob-blue;
+}
+
+.ambient-blob-emerald {
+  animation-name: ambient-blob-emerald;
+  animation-duration: 18s;
+}
+
+.ambient-earth {
+  animation: ambient-earth 11s ease-in-out infinite;
+}
+
+.ambient-earth-image {
+  animation: ambient-earth-image 8s ease-in-out infinite;
+}
+
+.ambient-earth-highlight {
+  animation: ambient-earth-highlight 10s ease-in-out infinite;
+}
+
+.ambient-shooting-star {
+  animation: ambient-shooting-star 9s linear infinite;
+  opacity: 0;
+  transform-origin: center;
+}
+
+.ambient-star {
+  animation-name: ambient-star;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes ambient-moon {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    opacity: 0.86;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes ambient-blob-blue {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(40px, 20px, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-20px, -10px, 0) scale(0.96);
+  }
+}
+
+@keyframes ambient-blob-emerald {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-35px, -25px, 0) scale(0.94);
+  }
+  66% {
+    transform: translate3d(20px, 10px, 0) scale(1.06);
+  }
+}
+
+@keyframes ambient-earth {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5.5px);
+  }
+}
+
+@keyframes ambient-earth-image {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes ambient-earth-highlight {
+  0%, 100% {
+    transform: translate3d(-2%, 0, 0);
+  }
+  50% {
+    transform: translate3d(4%, 1.5%, 0);
+  }
+}
+
+@keyframes ambient-shooting-star {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--shooting-star-angle, -24deg)) translate3d(0, 0, 0);
+  }
+  8% {
+    opacity: var(--shooting-star-opacity, 0.9);
+    transform: rotate(var(--shooting-star-angle, -24deg)) translate3d(calc(var(--shooting-star-x, -110vw) * 0.2), 0, 0);
+  }
+  40% {
+    opacity: var(--shooting-star-opacity, 0.9);
+    transform: rotate(var(--shooting-star-angle, -24deg)) translate3d(calc(var(--shooting-star-x, -110vw) * 0.55), 0, 0);
+  }
+  78% {
+    opacity: var(--shooting-star-opacity, 0.9);
+    transform: rotate(var(--shooting-star-angle, -24deg)) translate3d(calc(var(--shooting-star-x, -110vw) * 0.9), 0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--shooting-star-angle, -24deg)) translate3d(var(--shooting-star-x, -110vw), 0, 0);
+  }
+}
+
+@keyframes ambient-star {
+  0%, 100% {
+    opacity: 0.08;
+    transform: scale(0.78);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  70% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-moon,
+  .ambient-blob,
+  .ambient-earth,
+  .ambient-earth-image,
+  .ambient-earth-highlight,
+  .ambient-shooting-star,
+  .ambient-star {
+    animation: none;
+  }
+}
